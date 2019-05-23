@@ -1,0 +1,24 @@
+{
+
+    "compilerOptions": {
+  
+      "target": "es5",
+      "lib": [ "es2015", "dom" ],
+  
+      // Suppress warnings for using decorators
+      "experimentalDecorators": true,
+      "importHelpers": true,
+  
+      "baseUrl": ".",
+      "paths": {
+        "~/*": ["./src/*"]
+      },
+  
+      "typeRoots": ["./node_modules/@types", "./types"]
+    },
+  
+    "exclude": [
+      "node_modules",
+      "**/node_modules/*"
+    ]
+  }
