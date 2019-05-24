@@ -5,7 +5,8 @@
   "main": "src/index.html",
   "scripts": {
     "start": "parcel src/index.html",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --config jest.config.json",
+    "lint": "tslint -c tslint.json 'src/**/*.ts' 'test/**/*.ts'"
   },
   "author": "",
   "license": "ISC",
@@ -17,10 +18,14 @@
     "vuex-class-modules": "^1.0.0"
   },
   "devDependencies": {
+    "@types/jest": "^24.0.13",
     "@types/node": "^12.0.2",
     "@vue/component-compiler-utils": "^3.0.0",
+    "jest": "^24.8.0",
     "parcel-bundler": "^1.12.3",
+    "ts-jest": "^24.0.2",
     "tslib": "^1.9.3",
+    "tslint": "^5.16.0",
     "typescript": "^3.4.5",
     "vue-template-compiler": "^2.6.10"
   },

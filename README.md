@@ -15,6 +15,7 @@ I have the following requirements for a *type-safe* Vue+Vuex practice:
 - Support working with Vue components, in a type-safe way;
 - Support working outside Vue components, in a type-safe way;
 - (Optionally) Support property watching, in a type-safe way;
+- (Optionally) Support unit testing, in a type-safe way;
 
 I've searched through a bunch of Vuex type-safe libraries, and found `vuex-class-modules` the most satisfying with the above requirements.
 
@@ -147,3 +148,11 @@ store.watch(
 ```
 
 Before [this issue](https://github.com/gertqin/vuex-class-modules/issues/15) is fixed, we have to use `store.watch()` in general, because `someModule.$watch()` breaks for watching state changes and works only for getters.
+
+## Unit Testing
+
+Some other libraries like `vuex-module-decorators` forces a module class to accept only one Vuex store and creates only one module instance that is accessible via `getModule(SomeModule)`. This is not friendly in a unit testing environment where we may want to construct multiple module instance for multiple test cases within a single test suite.
+
+`vuex-class-modules` avoid this drawback and allows us to create as many as module instances of a single module class against multiple Vuex stores. This provides great flexibility for us to organize our test cases.
+
+P.S. I spent some time setting up the testing environment for Vuex module classes defined using `vuex-class-modules`. The trickiest part is to transpile `node_modules/vuex-class-modules/lib/*.js` files when executing tests, because these files are not plain JavaScript (e.g. `export { Action } from './actions'` in `vuex-class-modules/lib/index.js`) and causing fatal errors. I finally solved it by whitelisting all .js files in `vuex-class-modules` for transformation and using `ts-jest/presets/js-with-ts` as the Jest preset together with appending `"allowJs": true` into the test TypeScript configuration.

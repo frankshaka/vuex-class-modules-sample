@@ -12,7 +12,7 @@ export class Foo extends VuexModule {
 
     @Mutation
     removeName(name: string) {
-        this.names = this.names.filter(n => n !== name)
+        this.names = this.names.filter((n) => n !== name)
     }
 
 }

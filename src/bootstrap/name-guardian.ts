@@ -1,6 +1,6 @@
-import { store, foo } from '~/store'
+import { foo, store } from '~/store'
 
-let timeout = null
+let timeout: NodeJS.Timeout | null = null
 
 store.watch(
     () => {
@@ -11,10 +11,10 @@ store.watch(
             clearTimeout(timeout)
         }
         timeout = setTimeout(() => {
-            const badNames = names.filter(name => name.includes('4'))
+            const badNames = names.filter((name) => name.includes('4'))
             for (const name of badNames) {
                 foo.removeName(name)
             }
         }, 400)
-    }
+    },
 )
