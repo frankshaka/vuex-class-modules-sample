@@ -25,7 +25,7 @@ I've searched through [a bunch of Vuex type-safe libraries](https://www.npmjs.co
 
 ### Module Dependencies
 
-In a large-scale app that relies heavily on a Vuex store, we may have to split the store into multiple modules, where some modules may require others' state/getters/mutations/actions to fulfil their own responsibilities, thus forming *module dependencies*. In a conventional Vuex store, we achieve this by accessing `rootState`/`rootGetters` and/or commit/dispatch with `{ root: true }`, which has no type checking support and has a great possibility to cause *dependency cycles*. Using `vuex-class-modules`, we can declare dependent modules explicitly as private properties and receive them via constructor parameters:
+In a large-scale app that relies heavily on a Vuex store, we may have to split the store into multiple modules, where some modules may require others' state/getters/mutations/actions to fulfil their own responsibilities, thus forming *module dependencies*. In a conventional Vuex store, we achieve this by accessing `rootState`/`rootGetters` and/or committing/dispatching with `{ root: true }`, which has no type checking support and has a great possibility to cause *dependency cycles*. Using `vuex-class-modules`, we can declare dependent modules explicitly as private properties and receive them via constructor parameters:
 
 ```typescript
 /// store/bar.ts
@@ -58,9 +58,11 @@ Now it's impossible to create dependency cycles because you have to create depen
 
 ### Working With Vue Components
 
-`vuex-class-modules` does not provide mapping/binding helpers, but it allows us to directly access module properties/methods, so we can make computed properties and methods easily in a Vue component class (decorated by `vue-class-component`), like this:
+`vuex-class-modules` does not provide mapping/binding helpers, but it allows us to directly access module properties/methods, so we can make computed properties and methods easily in a Vue component class (decorated by [vue-class-component](https://github.com/vuejs/vue-class-component)), like this:
 
 ```typescript
+import Vue from 'vue'
+import Component from 'vue-class-component'
 import { someModule } from '~/store'
 
 @Component
@@ -76,11 +78,12 @@ export default class App extends Vue {
 }
 ```
 
-Compare it with decorated mappers (using `vuex-class`):
+Compare it with decorated mappers (using [vuex-class](https://github.com/ktsn/vuex-class)):
 
 ```typescript
+import Vue from 'vue'
+import Component from 'vue-class-component'
 import { namespace } from 'vuex-class'
-
 import { SomeModule } from '~/store/some-module'
 
 const someModule = namespace('someModule')
@@ -88,13 +91,13 @@ const someModule = namespace('someModule')
 @Component
 export default class App extends Vue {
     // State
-    @someModule.State property: typeof SomeModule.prototype.property
+    @someModule.State property: typeof SomeModule.prototype.property  // Manually specify types, avoiding `any`
     // Getters
-    @someModule.Getter getter: typeof SomeModule.prototype.getter
+    @someModule.Getter getter: typeof SomeModule.prototype.getter  // Manually specify types, avoiding `any`
     // Mutations
-    @someModule.Mutation commitMutation: typeof SomeModule.prototype.commitMutation
+    @someModule.Mutation commitMutation: typeof SomeModule.prototype.commitMutation  // Manually specify types, avoiding `any`
     // Actions
-    @someModule.Action dispatchAction: typeof SomeModule.prototype.dispatchAction
+    @someModule.Action dispatchAction: typeof SomeModule.prototype.dispatchAction  // Manually specify types, avoiding `any`
 }
 ```
 
@@ -157,4 +160,4 @@ Some other libraries like [vuex-module-decorators](https://github.com/championsw
 
 `vuex-class-modules` avoid this drawback and allows us to create as many as module instances of a single module class. This provides great flexibility for us to organize our test cases.
 
-P.S. I spent some time setting up an environment for testing module classes defined using `vuex-class-modules`. The trickiest part is to transpile all `node_modules/vuex-class-modules/lib/*.js` files when executing tests, because these files are not plain JavaScript (e.g. `export { Action } from './actions'` in `vuex-class-modules/lib/index.js`) which cause fatal errors. I finally solved it by whitelisting all .js files in `vuex-class-modules` for transformation and setting `ts-jest/presets/js-with-ts` as the Jest preset with `"allowJs": true` in TypeScript configuration for the testing environment.
+P.S. I spent some time setting up an environment for testing module classes defined using `vuex-class-modules`. The trickiest part is to transpile all `node_modules/vuex-class-modules/lib/*.js` files when executing tests, because these files are not plain JavaScript (e.g. `export { Action } from './actions'` in `vuex-class-modules/lib/index.js`) which cause fatal errors. I finally solved it by whitelisting all these files for transformation in Jest configuration and setting `ts-jest/presets/js-with-ts` as the Jest preset with `"allowJs": true` in the TypeScript configuration for testing.
