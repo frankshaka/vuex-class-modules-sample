@@ -17,7 +17,7 @@ I have the following requirements for a *type-safe* Vue+Vuex practice:
 - (Optionally) Support property watching, in a type-safe way;
 - (Optionally) Support unit testing, in a type-safe way;
 
-I've searched through a bunch of Vuex type-safe libraries, and found `vuex-class-modules` the most satisfying with the above requirements.
+I've searched through [a bunch of Vuex type-safe libraries](https://www.npmjs.com/search?q=vuex%20type), and found `vuex-class-modules` the most satisfying with the above requirements.
 
 ### Namespaced Modules
 
@@ -25,7 +25,7 @@ I've searched through a bunch of Vuex type-safe libraries, and found `vuex-class
 
 ### Module Dependencies
 
-In a large-scale app that relies heavily on a Vuex store, we may have to split the store into multiple modules, where some modules may require others' state/getters/mutations/actions to fulfil their own responsibilities, thus forming *module dependencies*. In a conventional Vuex store, we achieve this by accessing `rootState`/`rootGetters` and/or commit/dispatch with `{ root: true }`, which has no type checking support and has a great possibility to cause *dependency cycles*. Using `vuex-class-modules`, we can receive dependent modules via constructor parameters, and then assign them as private properties:
+In a large-scale app that relies heavily on a Vuex store, we may have to split the store into multiple modules, where some modules may require others' state/getters/mutations/actions to fulfil their own responsibilities, thus forming *module dependencies*. In a conventional Vuex store, we achieve this by accessing `rootState`/`rootGetters` and/or commit/dispatch with `{ root: true }`, which has no type checking support and has a great possibility to cause *dependency cycles*. Using `vuex-class-modules`, we can declare dependent modules explicitly as private properties and receive them via constructor parameters:
 
 ```typescript
 /// store/bar.ts
@@ -54,7 +54,7 @@ export const foo = new Foo({ store, name: 'foo' })
 export const bar = new Bar(foo, { store, name: 'bar' })
 ```
 
-It is way more clear to define module dependencies, and also type-safe.
+Now it's impossible to create dependency cycles because you have to create dependent modules in prior.
 
 ### Working With Vue Components
 
@@ -102,7 +102,7 @@ Using `vuex-class-modules` is more straight-forward and requires less typings as
 
 ### Working Outside Vue Components
 
-Since Vuex modules defined using `vuex-class-modules` can be accessed directly from anywhere, it's useful when defining plugins and helpers, in a type-safe way compared to `store.getters['xxx']`, `store.commit()` and `store.dispatch()`.
+Vuex modules defined using `vuex-class-modules` can be accessed directly by simply importing it from anywhere, which is useful when defining plugins and helpers, in a type-safe way compared with `store.getters['xxx']`, `store.commit()` and `store.dispatch()`.
 
 ```typescript
 import { someEventEmitter } from '~/someEventEmitter'
@@ -110,10 +110,10 @@ import { foo } from '~/store'
 
 someEventEmitter.on('some-event', (event) => {
     if (foo.someGetter === 'xxx') {
-        foo.commitMutation(event.value)
+        foo.commitMutation(event.value)  // type checking happens against `event.value`
     } else {
         foo.dispatchAction().then(() => {
-            foo.commitMutation(event.value)
+            foo.commitMutation(event.value)   // type checking happens against `event.value`
         })
     }
 })
@@ -124,12 +124,13 @@ someEventEmitter.on('some-event', (event) => {
 As a convenience method, `vuex-class-modules` provides `someModule.$watch()` for watching changes of a particular state or getter.
 
 ```typescript
-import { someModule } from './store'
+import { someModule } from '~/store'
+import { someFunction } from '~/someFeature'
 
 someModule.$watch(
     m => m.someGetter,
-    (newValue, oldValue) => {
-        console.log(newValue, oldValue)
+    (newValue, oldValue) => {  // types are inferred automatically
+        someFunction(newValue)   // type checking happens against `newValue`
     }
 )
 ```
@@ -137,12 +138,13 @@ someModule.$watch(
 However, since we can access module properties directly, we can also define watch behaviors using `store.watch()`:
 
 ```typescript
-import { store, someModule } from './store'
+import { store, someModule } from '~/store'
+import { someFunction } from '~/someFeature'
 
 store.watch(
     () => someModule.someState,
     (newValue, oldValue) => {  // types are inferred automatically
-        console.log(newValue, oldValue)
+        someFunction(newValue)   // type checking happens against `newValue`
     }
 )
 ```
@@ -151,8 +153,8 @@ Before [this issue](https://github.com/gertqin/vuex-class-modules/issues/15) is 
 
 ## Unit Testing
 
-Some other libraries like `vuex-module-decorators` forces a module class to accept only one Vuex store and creates only one module instance that is accessible via `getModule(SomeModule)`. This is not friendly in a unit testing environment where we may want to construct multiple module instance for multiple test cases within a single test suite.
+Some other libraries like [vuex-module-decorators](https://github.com/championswimmer/vuex-module-decorators) force a module class to create one single instance globally (accessible via `getModule(SomeModule)`). This is not friendly in a unit testing environment where we may want to construct multiple module instances within a single test suite.
 
-`vuex-class-modules` avoid this drawback and allows us to create as many as module instances of a single module class against multiple Vuex stores. This provides great flexibility for us to organize our test cases.
+`vuex-class-modules` avoid this drawback and allows us to create as many as module instances of a single module class. This provides great flexibility for us to organize our test cases.
 
-P.S. I spent some time setting up the testing environment for Vuex module classes defined using `vuex-class-modules`. The trickiest part is to transpile `node_modules/vuex-class-modules/lib/*.js` files when executing tests, because these files are not plain JavaScript (e.g. `export { Action } from './actions'` in `vuex-class-modules/lib/index.js`) and causing fatal errors. I finally solved it by whitelisting all .js files in `vuex-class-modules` for transformation and using `ts-jest/presets/js-with-ts` as the Jest preset together with appending `"allowJs": true` into the test TypeScript configuration.
+P.S. I spent some time setting up an environment for testing module classes defined using `vuex-class-modules`. The trickiest part is to transpile all `node_modules/vuex-class-modules/lib/*.js` files when executing tests, because these files are not plain JavaScript (e.g. `export { Action } from './actions'` in `vuex-class-modules/lib/index.js`) which cause fatal errors. I finally solved it by whitelisting all .js files in `vuex-class-modules` for transformation and setting `ts-jest/presets/js-with-ts` as the Jest preset with `"allowJs": true` in TypeScript configuration for the testing environment.
